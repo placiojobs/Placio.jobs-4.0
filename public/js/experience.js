@@ -18,7 +18,17 @@ const FRESHER_WORDS = new Set([
 ]);
 
 /** @returns {{min:number,max:number|null,isFresher:boolean}|null} null = cannot parse */
+export const MAX_PLAUSIBLE_YEARS = 50;
+
 export function parseExperience(raw) {
+  const r = parseRaw(raw);
+  // Values like "88", "1385" or "5-1477" are data accidents (e.g. an Excel cell turned into a number/date), not
+  // experience requirements. Treat them as unknown so they never match a filter or get displayed as a requirement.
+  if (r && (r.min > MAX_PLAUSIBLE_YEARS || (r.max !== null && r.max > MAX_PLAUSIBLE_YEARS))) return null;
+  return r;
+}
+
+function parseRaw(raw) {
   if (raw === null || raw === undefined) return null;
   const text = String(raw).trim().toLowerCase();
   if (!text) return null;
@@ -72,4 +82,15 @@ export function matchesExperienceToken(range, token) {
   if (Number.isNaN(year)) return false;
   if (range.max === null || range.max === undefined) return year >= range.min;
   return year >= range.min && year <= range.max;
+}
+
+/**
+ * Text to DISPLAY for an experience value: the original text when it is readable, or free text ("Entry level
+ * graduates"), but never a purely numeric value that is implausible ("5-1477", "88") — those are blank.
+ */
+export function cleanExperienceText(raw) {
+  const t = String(raw ?? "").trim();
+  if (!t) return "";
+  if (parseExperience(t)) return t;
+  return /^[\d\s.\-\u2013\u2014+/]+$/.test(t) ? "" : t;
 }

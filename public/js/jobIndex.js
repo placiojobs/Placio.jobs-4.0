@@ -27,7 +27,7 @@
  * Pure module (no DOM/Firebase) so it is unit-tested in Node.
  * Firestore forbids arrays-of-arrays, so rows live inside ONE JSON string field.
  */
-import { parseExperience } from "./experience.js";
+import { parseExperience, cleanExperienceText } from "./experience.js";
 import { buildJobSlug } from "./slug.js";
 import { blankIfPlaceholder } from "./normalize.js";
 import { DEPT_CITY_MATRIX } from "./site-config.js";
@@ -86,7 +86,7 @@ export function entryFromDoc(doc) {
   const range = parseExperience(blankIfPlaceholder(doc.exp));
   return makeEntry({
     jobId: doc.jobId, title: doc.title, company: doc.company, location: doc.location, dept: doc.dept,
-    exp: blankIfPlaceholder(doc.exp), type: blankIfPlaceholder(doc.type), salary: blankIfPlaceholder(doc.salary), skills: blankIfPlaceholder(doc.skillSet),
+    exp: cleanExperienceText(blankIfPlaceholder(doc.exp)), type: blankIfPlaceholder(doc.type), salary: blankIfPlaceholder(doc.salary), skills: blankIfPlaceholder(doc.skillSet),
     experienceMin: range ? range.min : null, experienceMax: range ? range.max : null,
     createdAt: doc.createdAt || 0, h: docHash(doc),
   });

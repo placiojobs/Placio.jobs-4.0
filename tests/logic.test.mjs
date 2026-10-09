@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseExperience, matchesExperienceToken } from "../public/js/experience.js";
+import { parseExperience, matchesExperienceToken, cleanExperienceText } from "../public/js/experience.js";
 import { normalizeJobRow, isValidUrl, blankIfPlaceholder } from "../public/js/normalize.js";
 import { validateRow, buildReport, analyzeHeaders, queryIssues } from "../public/js/validate.js";
 import {
@@ -289,4 +289,19 @@ test("placeholder values (—, N/A, Not specified…) count as blank; real value
   const d = normalizeJobRow({ jobId: "9", title: "T", company: "C", salary: "—", type: "-", exp: "N/A", skill_set: "n/a" });
   for (const k of ["salary", "type", "skillSet"]) assert.ok(!(k in d), k + " omitted");
   assert.equal(d.exp, "");
+});
+
+test("implausible experience (data accidents like 88, 1385, 5-1477) is unknown, hidden and never matches a filter", () => {
+  for (const raw of ["88", "1385", "5-1477", "4-100", "1465", "51", "0-99", "60+"]) {
+    assert.equal(parseExperience(raw), null, raw);
+    assert.equal(cleanExperienceText(raw), "", raw + " is not displayed");
+  }
+  // plausible and free-text values are untouched
+  for (const raw of ["Fresher", "0-1", "20+", "50", "3 to 5 years", "5-7", "Entry level graduates", "2+ years"]) {
+    assert.equal(cleanExperienceText(raw), raw, raw);
+  }
+  const e = entryFromDoc({ jobId: "981", title: "T", company: "C", exp: "5-1477", dept: "D", location: "Pune" });
+  assert.equal(e.exp, "");
+  assert.equal(e.experienceMin, null);
+  assert.equal(matchesExperienceToken({ min: e.experienceMin, max: e.experienceMax, isFresher: e.isFresher }, "6"), false);
 });

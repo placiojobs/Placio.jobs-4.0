@@ -7,3 +7,6 @@ firebase-debug.log
 # NEVER commit service-account keys
 *service-account*.json
 *-firebase-adminsdk-*.json
+
+.vercel
+.env*

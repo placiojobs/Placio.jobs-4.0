@@ -13,6 +13,7 @@ import { avatarHtml, saveButtonHtml, shareButtonHtml, stateHtml } from "../ui.js
 import { icons } from "../icons.js";
 import { esc, errorInfo, safeHttpUrl, $, toast, lockScroll } from "../utils.js";
 import { blankIfPlaceholder as clean } from "../normalize.js";
+import { cleanExperienceText } from "../experience.js";
 import { recordViewed } from "../store.js";
 import { track } from "../analytics.js";
 import { setDocData } from "../firebase.js";
@@ -34,7 +35,7 @@ function applyButton(link, cls = "") {
 
 function render(raw) {
   // old documents may contain "—" / "N/A" placeholders: treat them as blank
-  const job = { ...raw, salary: clean(raw.salary), type: clean(raw.type), exp: clean(raw.exp), location: clean(raw.location), dept: clean(raw.dept), skillSet: clean(raw.skillSet), desc: raw.desc ? String(raw.desc).trim() : "" };
+  const job = { ...raw, salary: clean(raw.salary), type: clean(raw.type), exp: cleanExperienceText(clean(raw.exp)), location: clean(raw.location), dept: clean(raw.dept), skillSet: clean(raw.skillSet), desc: raw.desc ? String(raw.desc).trim() : "" };
   const skills = job.skillSet ? job.skillSet.split(/[,;/]/).map((s) => s.trim()).filter(Boolean) : [];
   const meta = [
     job.location && `<span>${icons.pin}${esc(job.location)}</span>`,
