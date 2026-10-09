@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Placio — Career Platform for Students &amp; Freshers</title>
+<meta name="description" content="Find jobs, internships and fresher opportunities across India on Placio.">
+<link rel="canonical" href="https://placio.co.in/">
+<meta property="og:site_name" content="Placio">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="en_IN">
+<meta property="og:title" content="Placio — Career Platform for Students &amp; Freshers">
+<meta property="og:description" content="Find jobs, internships and fresher opportunities across India on Placio.">
+<meta property="og:url" content="https://placio.co.in/">
+<meta property="og:image" content="https://placio.co.in/assets/logo-full.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="/favicon.png">
+<link rel="preload" href="/assets/fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/fraunces-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/js/theme-init.js"></script>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main>
+  <section class="hero container">
+    <div class="hero__orbs" aria-hidden="true"><div class="orb orb--a"></div><div class="orb orb--b"></div><div class="orb orb--c"></div></div>
+    <div class="hero__badge"><i></i>Updated daily · India</div>
+    <h1 class="hero__title">Find your next opportunity, <span class="hero__accent" id="hero-accent">without the noise.</span></h1>
+    <p class="hero__lead">Placio curates real jobs, internships and fresher openings across India — searchable, filterable, and always up to date.</p>
+    <div class="hero__search"><div id="hero-search"></div><button class="btn btn--primary" id="hero-go" type="button">Search</button></div>
+    <div class="hero__cta">
+      <a class="btn btn--primary" href="/jobs">Browse Jobs <span class="arrow" aria-hidden="true">→</span></a>
+      <a class="btn btn--outline" href="/jobs?dept=Fresher">Fresher Zone</a>
+    </div>
+  </section>
+
+  <section class="container" style="padding-bottom:1rem"><div class="popular reveal" id="popular"></div></section>
+
+  <section class="container section"><h2 class="h-section">Quick Access</h2><div class="quick-grid" id="quick" style="margin-top:1rem"></div></section>
+
+  <section class="container section" id="continue" hidden></section>
+
+  <section class="container section">
+    <div class="section-head"><div><h2 class="h-section">Latest Opportunities</h2><p>We update jobs every day. New jobs and new profiles are added regularly — keep checking every day.</p></div><a class="link-arrow" href="/jobs?sort=latest">View all →</a></div>
+    <div id="latest"><div class="grid-jobs"><div class="job-skeleton"><div class="skeleton" style="width:70%;height:16px"></div><div class="skeleton" style="width:45%"></div><div class="skeleton" style="width:90%"></div></div><div class="job-skeleton"><div class="skeleton" style="width:70%;height:16px"></div><div class="skeleton" style="width:45%"></div><div class="skeleton" style="width:90%"></div></div><div class="job-skeleton"><div class="skeleton" style="width:70%;height:16px"></div><div class="skeleton" style="width:45%"></div><div class="skeleton" style="width:90%"></div></div></div></div>
+  </section>
+
+  <section class="container section">
+    <div class="center-head reveal"><div class="eyebrow">How It Works</div><h2>Three steps, no clutter</h2></div>
+    <div class="steps">
+      <div class="step reveal"><div class="step__n">01</div><div class="step__t">Search or filter</div><p>Type a role, a city, or your department — or use Quick Access and the matrices to jump straight to what’s relevant to you.</p></div>
+      <div class="step reveal" style="--d:80ms"><div class="step__n">02</div><div class="step__t">Narrow it down</div><p>Stack department, location, experience and company filters together. Every combination gets a real, shareable URL.</p></div>
+      <div class="step reveal" style="--d:160ms"><div class="step__n">03</div><div class="step__t">Apply with confidence</div><p>Open a listing, review the real details and the application link, and apply directly on the company’s own site.</p></div>
+    </div>
+  </section>
+
+  <section class="container section"><h2 class="h-section">Fresher Opportunities by City</h2><p class="muted" style="font-size:.9rem;margin-top:.25rem">Pick a department and a city to jump straight to matching jobs.</p><div class="matrix-wrap reveal" style="margin-top:1.1rem"><table class="matrix" id="fresher-matrix"></table></div></section>
+
+  <section class="container section" id="dc-section" hidden><h2 class="h-section">Departments by City</h2><p class="muted" style="font-size:.9rem;margin-top:.25rem">The most active departments and cities right now, with live job counts — all experience levels.</p><div class="matrix-wrap reveal" style="margin-top:1.1rem"><table class="matrix" id="dept-matrix"></table></div></section>
+
+  <section class="band">
+    <div class="container">
+      <div class="center-head reveal"><div class="eyebrow">Why Placio</div><h2>A career platform that respects your time</h2></div>
+      <div class="why-grid">
+        <div class="why reveal"><div class="why__i">◎</div><div><div class="why__t">Built for freshers</div><p>Department, city and experience filters designed around how students and early-career candidates actually search — not a generic enterprise job board bolted on.</p></div></div>
+        <div class="why reveal" style="--d:70ms"><div class="why__i">⌁</div><div><div class="why__t">Fast, not bloated</div><p>No account required to browse. No dark patterns. A search that returns results in a moment, not a spinner that never resolves.</p></div></div>
+        <div class="why reveal" style="--d:140ms"><div class="why__i">⛁</div><div><div class="why__t">Direct to the source</div><p>Every Apply button goes straight to the employer’s own application page — Placio is a discovery layer, not a middleman collecting your data.</p></div></div>
+        <div class="why reveal" style="--d:210ms"><div class="why__i">⚭</div><div><div class="why__t">Shareable by design</div><p>Every search, filter combination, and job page has its own real URL. Send a friend the exact list you’re looking at, not a screenshot.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="container section" id="popular-lists" hidden><div class="two-col"><div><h2 class="h-section">Popular Departments</h2><div class="pill-row" id="pop-depts"></div></div><div><h2 class="h-section">Popular Cities</h2><div class="pill-row" id="pop-cities"></div></div></div></section>
+
+  <section class="container section">
+    <div class="about-teaser reveal">
+      <div><div class="eyebrow">About Placio</div><h2>Started in 2025, built for the next generation</h2><p>Placio began in 2025 with a simple frustration: quality opportunities were scattered across dozens of portals, buried under noise, or gated behind logins. We’re building the version we wished existed — one search surface, real filters, and a straight line to the application.</p><a class="link-arrow" style="display:inline-block;margin-top:1rem" href="/about">Read our story →</a></div>
+      <div class="mini-stats"><div class="mini-stat"><b>140+</b><span>Departments</span></div><div class="mini-stat"><b>35+</b><span>Indian cities</span></div><div class="mini-stat mini-stat--wide"><b>Daily</b><span>Listing updates</span></div></div>
+    </div>
+  </section>
+
+  <section class="container" style="padding-bottom:3rem">
+    <div class="cta-final reveal"><h2>Your next opportunity is a search away.</h2><p>No sign-up required to browse. Filter by what matters to you and start applying today.</p><div class="hero__cta"><a class="btn btn--primary" href="/jobs">Browse Jobs</a><a class="btn btn--outline" href="/jobs?dept=Fresher">Fresher Zone</a></div></div>
+  </section>
+  <noscript><div class="container section"><p class="muted">Placio needs JavaScript to search and filter jobs. Please enable it in your browser.</p></div></noscript>
+</main>
+<div id="site-footer"></div>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/pages/home.js"></script>
+</body>
+</html>

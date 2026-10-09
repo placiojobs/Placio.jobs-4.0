@@ -1,0 +1,86 @@
+rules_version = '2';
+
+// PLACIO — Firestore security rules.  THESE (not the admin screens) are what protect your data.
+//
+// Public visitors can: read ONE job by its id, read the small index/meta documents, and WRITE an
+//                      anonymous job report (create-only, strictly shaped).
+// Only admins can:     list/write jobs, write the index, read/write admin data and the activity log.
+// "Admin" = a Firebase Auth user whose signed token carries the custom claim admin == true.
+// The claim can only be set with scripts/grant-admin.mjs (needs the service-account key on YOUR
+// computer). Clients can never set or forge it.
+//
+// Deploy:  firebase deploy --only firestore:rules
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.token.admin == true;
+    }
+
+    function validJob(jobId) {
+      let d = request.resource.data;
+      return jobId.matches('^[A-Za-z0-9_]{1,64}$')
+        && d.jobId == jobId
+        && d.status in ['active', 'removed']
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 300
+        && d.company is string && d.company.size() > 0 && d.company.size() <= 200
+        && (!('desc' in d) || (d.desc is string && d.desc.size() <= 30000))
+        && (!('link' in d) || (d.link is string && d.link.size() <= 2000 && (d.link == '' || d.link.matches('^https?://.*'))));
+    }
+
+    function validReport(id) {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['jobId', 'reason', 'at'])
+        && d.jobId is string && d.jobId.matches('^[A-Za-z0-9_]{1,64}$')
+        && d.reason in ['Incorrect information', 'Broken application link', 'Job no longer available', 'Duplicate job', 'Other']
+        && d.at is int
+        && d.at > request.time.toMillis() - 600000
+        && d.at < request.time.toMillis() + 600000
+        // one report per job + reason + day: the id encodes it, create-only means repeats are rejected
+        && id.matches('^' + d.jobId + '__[0-9]{8}__[0-4]$');
+    }
+
+    // Full job documents (description, apply link). Reading ONE job by id is public; listing is not.
+    match /jobs/{jobId} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && validJob(jobId);
+      allow delete: if isAdmin();
+    }
+
+    // Published job index (fallback copy of the Storage file) and the small meta document.
+    match /jobIndex/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+    match /meta/{id} {
+      allow get: if true;
+      allow list: if false;
+      allow write: if isAdmin();
+    }
+
+    // Admin-only: content hashes used by Excel sync, and the audit / import-history log.
+    match /adminIndex/{id} {
+      allow read, write: if isAdmin();
+    }
+    match /adminActivity/{id} {
+      allow read: if isAdmin();
+      allow create: if isAdmin() && request.resource.data.keys().hasOnly(['action', 'actorEmail', 'detail', 'at']);
+      allow update, delete: if false; // the log is append-only
+    }
+
+    // Anonymous "Report this job": create-only, strictly validated, never publicly readable.
+    match /jobReports/{id} {
+      allow create: if validReport(id);
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

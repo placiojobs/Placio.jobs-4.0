@@ -1,0 +1,95 @@
+/* ==========================================================================
+   PLACIO — breakpoints (mobile-first).
+   Checked at 320 / 375 / 390 / 430 / 768 / 1024 / 1280 / 1440 / 1920 px.
+   ========================================================================== */
+
+/* very small phones (≤ 400px): stack the hero search, tighter cards */
+@media (max-width: 400px) {
+  .hero__search { flex-direction: column; }
+  .hero__search .btn { width: 100%; }
+  .job-card__link { padding: 1rem; }
+  .job-card__title { font-size: 1.02rem; }
+  .job-head { flex-direction: column; }
+  .job-actions { align-self: flex-start; }
+  .consent__actions { grid-template-columns: 1fr; }
+  .toolbar__side { flex-wrap: wrap; }
+}
+
+/* ≥ 480px */
+@media (min-width: 480px) {
+  .footer__grid { grid-template-columns: 1fr 1fr; }
+  .footer__grid > :first-child { grid-column: 1 / -1; }
+}
+
+/* ≥ 640px  (large phones / small tablets) */
+@media (min-width: 640px) {
+  .container { padding-inline: 1.5rem; }
+  .section { padding-block: 3rem; }
+  .hero { padding-block: 3.5rem; }
+  .hero__lead { font-size: 1.05rem; }
+  .quick-grid { grid-template-columns: repeat(4, 1fr); }
+  .grid-jobs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  .why-grid { grid-template-columns: repeat(2, 1fr); }
+  .rec-grid { grid-template-columns: repeat(2, 1fr); }
+  .toolbar { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .toolbar__side .select { flex: none; width: 10.5rem; }
+  .searchbox kbd { display: block; }
+  .nav .nav__cta { display: inline-flex; }
+  .page-title { font-size: 2rem; }
+  .about-teaser { padding: 2.25rem; grid-template-columns: 1.2fr 1fr; align-items: center; }
+  .info-cards.two { grid-template-columns: 1fr 1fr; }
+  .consent { left: 1rem; bottom: 1rem; margin-inline: 0; }
+  .consent__actions { grid-template-columns: auto auto 1fr; }
+  .consent__actions .btn--ghost { grid-column: auto; }
+}
+
+/* ≥ 768px  (tablets) */
+@media (min-width: 768px) {
+  .nav__links { display: flex; }
+  .burger-btn { display: none; }
+  .two-col { grid-template-columns: 1fr 1fr; }
+  .footer__grid { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
+  .footer__grid > :first-child { grid-column: auto; }
+  .job-title { font-size: 2.1rem; }
+}
+
+/* ≥ 1024px  (laptops): filters become a sticky sidebar, job page gets a side column */
+@media (min-width: 1024px) {
+  .container { padding-inline: 2rem; }
+  .browse { grid-template-columns: 15.5rem minmax(0, 1fr); gap: 2rem; align-items: start; }
+  .filters { position: sticky; top: 5.75rem; z-index: 1; max-height: calc(100vh - 7rem); border-radius: var(--radius); transform: none; visibility: visible; box-shadow: var(--shadow-sm); transition: none; }
+  .filters__grab, .filters__foot, .filters__close, .sheet-backdrop, .toolbar__filters-btn { display: none !important; }
+  .filters__head { padding-top: 1rem; }
+  .filters__body { padding-bottom: 1.25rem; }
+  .job-layout { grid-template-columns: minmax(0, 1fr) 20rem; gap: 3rem; padding-bottom: 3rem; }
+  .job-apply { display: block; }
+  .sticky-apply { display: none; }
+  .to-top { bottom: 1.5rem; }
+  .hero { padding-block: 5rem 4.5rem; }
+}
+
+/* ≥ 1280px */
+@media (min-width: 1280px) {
+  .grid-jobs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .hero__lead { font-size: 1.1rem; }
+}
+
+/* ≥ 1536px (large desktops / 1920 monitors): a little more breathing room */
+@media (min-width: 1536px) {
+  :root { --container: 78rem; }
+  html { font-size: 17px; }
+}
+
+/* touch devices: no hover-only affordances, comfortable targets */
+@media (hover: none) {
+  .job-card:hover { transform: none; box-shadow: var(--shadow-sm); }
+  .multi__opt { min-height: 46px; }
+  .exp-chip { min-height: 40px; }
+}
+
+/* print: job pages print cleanly */
+@media print {
+  .nav, .footer, .consent, .to-top, .sticky-apply, .job-actions, .job-apply, .toast, .hero__orbs { display: none !important; }
+  main { padding-top: 0; }
+}

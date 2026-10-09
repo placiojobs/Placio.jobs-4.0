@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Browse Jobs | Placio</title>
+<meta name="description" content="Search and filter jobs, internships and fresher opportunities across India on Placio.">
+<!-- Canonical is always the bare /jobs: filtered URLs stay crawlable and shareable but don't compete as separate pages. -->
+<link rel="canonical" href="https://placio.co.in/jobs">
+<meta property="og:site_name" content="Placio">
+<meta property="og:title" content="Browse Jobs | Placio">
+<meta property="og:description" content="Search and filter jobs, internships and fresher opportunities across India on Placio.">
+<meta property="og:url" content="https://placio.co.in/jobs">
+<meta property="og:image" content="https://placio.co.in/assets/logo-full.png">
+<link rel="icon" href="/favicon.png">
+<link rel="preload" href="/assets/fonts/inter-normal.woff2" as="font" type="font/woff2" crossorigin>
+<script src="/js/theme-init.js"></script>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/components.css">
+<link rel="stylesheet" href="/css/responsive.css">
+</head>
+<body>
+<div id="site-nav"></div>
+<main id="main" class="container" style="padding-top:6.25rem">
+  <h1 class="page-title">Browse Jobs</h1>
+
+  <div class="toolbar">
+    <div class="toolbar__row"><div id="search" style="flex:1;min-width:0"></div><button class="btn btn--primary" id="search-go" type="button">Search</button></div>
+    <div class="toolbar__side">
+      <button class="btn btn--outline toolbar__filters-btn" id="open-filters" type="button" aria-controls="filters" aria-expanded="false">Filters <span id="filter-count"></span></button>
+      <select class="select select--pill" id="sort" aria-label="Sort jobs"></select>
+      <button class="btn btn--outline" id="share-search" type="button" aria-label="Share this search">Share</button>
+    </div>
+  </div>
+
+  <div class="chips" id="chips" aria-label="Active filters" hidden></div>
+
+  <div class="browse">
+    <div class="sheet-backdrop" id="sheet-backdrop"></div>
+    <aside class="filters" id="filters" aria-label="Filters">
+      <div class="filters__grab" id="grab" aria-hidden="true"></div>
+      <div class="filters__head"><h2>Filters</h2><button class="icon-btn filters__close" id="close-filters" type="button" aria-label="Close filters"></button></div>
+      <div class="filters__body">
+        <div id="f-dept"></div><div id="f-loc"></div><div id="f-company"></div><div id="f-exp"></div>
+      </div>
+      <div class="filters__foot"><button class="btn btn--outline" id="clear-sheet" type="button">Clear all</button><button class="btn btn--primary" id="show-results" type="button">Show results</button></div>
+    </aside>
+    <section aria-live="polite" aria-busy="true" id="results-wrap">
+      <div class="results-meta" id="meta" hidden></div>
+      <div id="results"></div>
+      <div class="load-more" id="more" hidden><button class="btn btn--outline" id="load-more" type="button">Load more</button></div>
+    </section>
+  </div>
+  <noscript><p class="muted">Placio needs JavaScript to search and filter jobs. Please enable it in your browser.</p></noscript>
+</main>
+<div id="site-footer"></div>
+<script type="module" src="/js/layout.js"></script>
+<script type="module" src="/js/pages/browse.js"></script>
+</body>
+</html>
+

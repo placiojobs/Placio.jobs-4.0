@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Static pages only. For every job page, use Admin > Dashboard > Download sitemap.xml, replace this file and redeploy. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://placio.co.in/</loc></url>
+  <url><loc>https://placio.co.in/jobs</loc></url>
+  <url><loc>https://placio.co.in/about</loc></url>
+  <url><loc>https://placio.co.in/contact</loc></url>
+  <url><loc>https://placio.co.in/privacy</loc></url>
+  <url><loc>https://placio.co.in/terms</loc></url>
+  <url><loc>https://placio.co.in/cookies</loc></url>
+</urlset>

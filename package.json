@@ -1,0 +1,24 @@
+{
+  "name": "placio",
+  "version": "5.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Placio - static HTML/CSS/vanilla-JS site on Firebase (Hosting, Firestore, Storage, Auth).",
+  "scripts": {
+    "dev": "node dev/server.mjs",
+    "demo": "node dev/server.mjs --demo",
+    "test": "node --import ./tests/register.mjs --test \"tests/*.test.mjs\"",
+    "scale": "node --expose-gc tests/scale.mjs",
+    "check": "node scripts/check.mjs",
+    "test:rules": "firebase emulators:exec --only firestore,storage --project demo-placio \"node --test tests/rules/rules.test.mjs\"",
+    "dev:emulator": "node dev/server.mjs --emulator",
+    "smoke": "node scripts/smoke.mjs",
+    "grant-admin": "node scripts/grant-admin.mjs"
+  },
+  "devDependencies": {
+    "exceljs": "^4.4.0"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
+  }
+}

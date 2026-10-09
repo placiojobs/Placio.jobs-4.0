@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// PLACIO — Cloud Storage rules. Storage holds ONE kind of file: the published job index.
+// Anyone can read it (it is public job data); only admins can write it, and only in the expected shape.
+//
+// Deploy:  firebase deploy --only storage
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /index/{file} {
+      allow read: if true;
+      allow create: if resource == null && request.auth != null && request.auth.token.admin == true
+        && file.matches('^v[0-9]+\\.json$')
+        && request.resource.size < 30 * 1024 * 1024
+        && request.resource.contentType == 'application/json';
+      allow update: if false;                       // versions are immutable
+      allow delete: if request.auth != null && request.auth.token.admin == true;
+    }
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
