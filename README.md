@@ -4,6 +4,7 @@ Job-discovery site for students and freshers in India — **plain HTML + CSS + v
 (Firestore + Auth; hosted on Vercel). No build step, no framework, no server to maintain.
 
 > **Deploying?** Read **[DEPLOY.md](DEPLOY.md)** — every command in order (first time / before / after each deployment).
+> 
 > Runs on the Firebase **Spark (free) plan**: no Firebase Storage, no Firebase Hosting needed.
 
 > This is a conversion of the earlier Next.js/React/Tailwind project. Same pages, same features, same Firebase
