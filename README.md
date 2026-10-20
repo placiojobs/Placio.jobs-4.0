@@ -1,5 +1,6 @@
 # Placio
 
+deployed on 20/10/2k26 (Dussehra)
 Job-discovery site for students and freshers in India — **plain HTML + CSS + vanilla JavaScript + Firebase**
 (Firestore + Auth; hosted on Vercel). No build step, no framework, no server to maintain.
 
