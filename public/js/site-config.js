@@ -127,7 +127,7 @@ export const MAJOR_DEPARTMENTS = [
   "Software-Salesforce", "Software-Site Reliability Engineering",
   "Software-Snowflake", "Software-SQL", "Software-Testing",
   "Software-UI/UX Design", "Support Engineer", "Training Development",
-  "Treasury", "Workday Analyst", "Software-Servicenow","Other",
+  "Treasury", "Workday Analyst", "Software-Servicenow", "Engineer-Civil","Other",
 ];
 
 export const MAJOR_LOCATIONS = [
