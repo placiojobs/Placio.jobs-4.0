@@ -50,7 +50,7 @@ console.log("\nSecurity headers");
 {
   const r = await get("/");
   const h = (k) => r.headers.get(k) || "";
-  ok(/script-src 'self' https:\/\/www\.gstatic\.com;/.test(h("content-security-policy")) && !/unsafe-eval/.test(h("content-security-policy")), "Content-Security-Policy present, no unsafe-eval");
+  ok(/script-src 'self' https:\/\/www\.gstatic\.com https:\/\/\*\.googletagmanager\.com;/.test(h("content-security-policy")) && !/unsafe-eval/.test(h("content-security-policy")), "Content-Security-Policy present, no unsafe-eval");
   ok(/frame-ancestors 'none'/.test(h("content-security-policy")) && /object-src 'none'/.test(h("content-security-policy")), "CSP forbids framing and plugins");
   ok(/nosniff/i.test(h("x-content-type-options")), "X-Content-Type-Options: nosniff");
   ok(/deny/i.test(h("x-frame-options")), "X-Frame-Options: DENY");

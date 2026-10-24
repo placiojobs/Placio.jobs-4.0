@@ -140,7 +140,7 @@ Free-plan write limit is 20,000 writes/day: a first-time import of 25,000 jobs m
 
 ## 7. Privacy
 
-Placio sets **no cookies**; it uses localStorage/sessionStorage/IndexedDB (listed in the footer → *Privacy & cookie preferences* and in `cookies.html`). No analytics is loaded unless you set `ANALYTICS.gaId` in `site-config.js` — and then only after the visitor opts in (equal-weight Accept / Reject banner). If you enable GA you must also allow `https://www.googletagmanager.com` (script-src) and `https://*.google-analytics.com` (connect-src) in the CSP in `firebase.json`, and update the Privacy Policy. Fonts are self-hosted (no Google Fonts requests).
+**Google Analytics is installed** (tag `G-SBMSLDDXC8`): the loader `<script>` is in the `<head>` of every public page and its init code is in `public/js/gtag-init.js` (a file, because the Content-Security-Policy forbids inline scripts). It loads for every visitor with **no consent banner**; the Privacy and Cookie pages say so, and the CSP in `vercel.json`/`firebase.json` allows Google's domains. Admin pages deliberately do not load it. To remove it: delete the two tag lines from each page, delete `gtag-init.js`, and revert the CSP and legal-page wording. Placio itself sets no cookies; it uses localStorage/sessionStorage/IndexedDB (listed in the footer → *Privacy & cookie preferences* and in `cookies.html`).
 Legal pages describe what the code really does; they are not legal advice — have them reviewed if you operate in regions with specific rules.
 
 ## 8. Tests

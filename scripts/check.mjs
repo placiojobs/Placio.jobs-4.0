@@ -89,7 +89,7 @@ try {
   for (const s of need) if (!v.rewrites.some((r) => r.source === s)) bad("vercel.json is missing rewrite " + s);
   if (v.outputDirectory !== "public") bad("vercel.json outputDirectory must be public");
   if (!v.headers.some((h) => h.missing && JSON.stringify(h.missing).includes("placio")) ) bad("vercel.json lost the noindex-on-test-domains rule");
-  if (!/script-src 'self' https:\/\/www\.gstatic\.com;/.test(vg.find((h) => h.key === "Content-Security-Policy").value)) bad("CSP script-src changed unexpectedly");
+  if (!/script-src 'self' https:\/\/www\.gstatic\.com https:\/\/\*\.googletagmanager\.com;/.test(vg.find((h) => h.key === "Content-Security-Policy").value)) bad("CSP script-src changed unexpectedly");
 } catch (e) {
   bad("vercel.json / firebase.json not readable: " + e.message);
 }

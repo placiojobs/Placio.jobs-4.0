@@ -8,6 +8,7 @@
 
 /** Documented inventory — shown to the user in "Privacy / Cookie preferences". */
 export const STORAGE_ITEMS = [
+  { key: "_ga, _ga_SBMSLDDXC8", where: "cookies (set by Google Analytics)", category: "Analytics", purpose: "Anonymous visit statistics. Up to 2 years." },
   { key: "placio.consent.v1", where: "localStorage", category: "Necessary", purpose: "Remembers your privacy choice." },
   { key: "placio.theme", where: "localStorage", category: "Functional", purpose: "Remembers light / dark mode." },
   { key: "placio.savedJobs.v1", where: "localStorage", category: "Functional", purpose: "Jobs you saved on this device." },

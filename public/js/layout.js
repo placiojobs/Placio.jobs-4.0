@@ -163,12 +163,12 @@ function openPrefs() {
   modal.id = "prefs-modal";
   modal.innerHTML = `<div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="prefs-title" style="max-width:34rem">
     <h2 class="modal__title" id="prefs-title">Privacy &amp; cookie preferences</h2>
-    <p class="muted" style="font-size:.85rem">${esc(SITE.name)} sets <strong>no cookies</strong> of its own and shows no ads. It keeps a small amount of data in your browser so the site works; none of it is sent to us.</p>
+    <p class="muted" style="font-size:.85rem">${esc(SITE.name)} itself sets <strong>no cookies</strong> and shows no ads. Google Analytics sets its own cookies (<code>_ga</code>) to count visits. A small amount of other data is kept in your browser so the site works; none of that is sent to us.</p>
     <div class="prefs-row"><div><h3>Necessary</h3><p>Remembers your choice and caches the job list so pages load fast. Always on.</p></div><label class="switch"><input type="checkbox" checked disabled aria-label="Necessary storage (always on)"><span></span></label></div>
     <div class="prefs-row"><div><h3>Functional</h3><p>Saved jobs, recently viewed jobs, recent searches and dark-mode choice. Only stored when you use those features, and only on this device.</p></div><label class="switch"><input type="checkbox" checked disabled aria-label="Functional storage (set only when you use the feature)"><span></span></label></div>
     ${hasAnalytics
       ? `<div class="prefs-row"><div><h3>Analytics (optional)</h3><p>Anonymous usage statistics (which pages are used) via Google Analytics. Off unless you switch it on.</p></div><label class="switch"><input type="checkbox" id="pref-analytics" ${consent?.analytics ? "checked" : ""} aria-label="Analytics"><span></span></label></div>`
-      : `<div class="prefs-row"><div><h3>Analytics &amp; marketing</h3><p>Not used. ${esc(SITE.name)} currently runs no analytics, advertising or tracking scripts.</p></div></div>`}
+      : `<div class="prefs-row"><div><h3>Analytics</h3><p>Google Analytics is used for anonymous visit statistics (cookies <code>_ga</code>). No advertising or marketing cookies. Opt out with <a href="https://tools.google.com/dlpage/gaoptout" target="_blank" rel="noopener noreferrer">Google’s opt-out browser add-on</a>.</p></div></div>`}
     <details style="margin-top:.5rem"><summary class="link-quiet" style="cursor:pointer">What exactly is stored?</summary><table class="storage-table"><tbody>${rows}</tbody></table></details>
     <div class="row" style="margin-top:1.1rem;justify-content:flex-end">
       <button class="btn btn--ghost btn--sm" type="button" id="pref-clear">Clear data on this device</button>
