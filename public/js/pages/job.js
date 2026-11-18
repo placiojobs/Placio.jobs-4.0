@@ -27,10 +27,18 @@ function slugFromLocation() {
 
 const notFoundHtml = (title, text) => `<div class="container section">${stateHtml({ title, text, actions: `<a class="btn btn--primary btn--sm" href="/jobs">Explore other jobs</a><a class="btn btn--outline btn--sm" href="/">Go home</a>` })}</div>`;
 
-function applyButton(link, cls = "") {
+// Label says where the click goes: "Apply on <Company>'s site". Falls back to a generic label when the
+// company name is missing or long (keeps the button on one line, especially on phones).
+function applyLabel(company) {
+  const name = String(company || "").trim();
+  if (!name || name.length > 24) return "Apply on company site";
+  return `Apply on ${esc(name)}${/s$/i.test(name) ? "’" : "’s"} site`; // "Freshworks’ site", "NTT Data’s site"
+}
+
+function applyButton(link, cls = "", company = "") {
   const url = safeHttpUrl(link);
   if (!url) return `<button class="btn btn--primary ${cls}" type="button" disabled title="No application link is available for this job.">Application link unavailable</button>`;
-  return `<a class="btn btn--primary ${cls}" data-apply href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">Apply Now ${icons.external.replace("<svg", '<svg style="width:16px;height:16px"')}</a>`;
+  return `<a class="btn btn--primary ${cls}" data-apply href="${esc(url)}" target="_blank" rel="noopener noreferrer nofollow">${applyLabel(company)} ${icons.external.replace("<svg", '<svg style="width:16px;height:16px"')}</a>`;
 }
 
 function render(raw) {
@@ -53,7 +61,7 @@ function render(raw) {
       </div>
       ${meta ? `<div class="job-meta">${meta}</div>` : ""}
       ${job.dept ? `<div class="job-dept">${esc(job.dept)}</div>` : ""}
-      <div class="job-apply">${applyButton(job.link)}${hasLink ? `<p class="leaving-note">Opens the employer’s own website in a new tab. ${esc(SITE.name)} doesn’t handle your application.</p>` : ""}</div>
+      <div class="job-apply">${applyButton(job.link, "", job.company)}${hasLink ? `<p class="leaving-note">Opens the employer’s own website in a new tab. ${esc(SITE.name)} doesn’t handle your application.</p>` : ""}</div>
       ${job.desc ? `<section class="job-section"><h2>Job Description</h2><p class="job-desc preserve-linebreaks">${esc(job.desc)}</p></section>` : ""}
       ${skills.length ? `<section class="job-section"><h2>Skills</h2><div class="tags">${skills.map((s) => `<span class="tag">${esc(s)}</span>`).join("")}</div></section>` : ""}
       <p class="disclaimer">Disclaimer: This job posting has been aggregated from an external source. Role details, content, and availability are subject to change. ${esc(SITE.name)} is not the employer and does not guarantee hiring, interviews or the accuracy of the listing. Please confirm the latest information on the company’s website before applying, and never pay money to apply for a job.</p>
