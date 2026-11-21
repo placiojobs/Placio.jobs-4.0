@@ -140,7 +140,7 @@ Free-plan write limit is 20,000 writes/day: a first-time import of 25,000 jobs m
 
 ## 7. Privacy
 
-**Google Analytics is installed** (tag `G-SBMSLDDXC8`): the loader `<script>` is in the `<head>` of every public page and its init code is in `public/js/gtag-init.js` (a file, because the Content-Security-Policy forbids inline scripts). It loads for every visitor with **no consent banner**; the Privacy and Cookie pages say so, and the CSP in `vercel.json`/`firebase.json` allows Google's domains. Admin pages deliberately do not load it. To remove it: delete the two tag lines from each page, delete `gtag-init.js`, and revert the CSP and legal-page wording. Placio itself sets no cookies; it uses localStorage/sessionStorage/IndexedDB (listed in the footer → *Privacy & cookie preferences* and in `cookies.html`).
+**Google Analytics is consent-based** (tag `G-SBMSLDDXC8`, set as `ANALYTICS.gaId` in `public/js/site-config.js`): nothing loads until the visitor accepts analytics in the consent banner or *Privacy & cookie preferences*; `public/js/analytics.js` then loads Google's script. The CSP in `vercel.json`/`firebase.json` allows Google's domains. Admin pages do not load it. To remove it: set `gaId` to `""`. Placio itself sets no cookies; it uses localStorage/sessionStorage/IndexedDB (listed in the footer → *Privacy & cookie preferences* and in `cookies.html`).
 Legal pages describe what the code really does; they are not legal advice — have them reviewed if you operate in regions with specific rules.
 
 ## 8. Tests

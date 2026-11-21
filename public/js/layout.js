@@ -4,19 +4,22 @@
  * back-to-top, desktop-only custom cursor, scroll reveals.
  * Navigation items and footer links come from site-config.js.
  */
-import { SITE, NAV_LINKS, FOOTER_LINKS } from "./site-config.js";
+import { SITE, NAV_LINKS, FOOTER_LINKS, DEPARTMENT_PAGES } from "./site-config.js";
 import { icons } from "./icons.js";
 import { esc, lockScroll } from "./utils.js";
 import { STORAGE_ITEMS, getConsent, setConsent } from "./store.js";
 import { analyticsConfigured, syncAnalytics } from "./analytics.js";
 import { bindJobActions, observeReveals } from "./ui.js";
 
-const path = location.pathname.replace(/\/+$/, "") || "/";
+const path = location.pathname.replace(/\/+$/, "").replace(/(\/index)?\.html$/, "") || "/";
 const isActive = (href) => (href === "/" ? path === "/" : path === href || path.startsWith(href + "/"));
+const linkActive = (l) => isActive(l.match || l.href);
 
 function navHtml() {
-  const links = NAV_LINKS.map((l) => `<a class="nav__link ${isActive(l.href) ? "is-active" : ""}" href="${esc(l.href)}" ${isActive(l.href) ? 'aria-current="page"' : ""}>${esc(l.label)}</a>`).join("");
-  const menu = NAV_LINKS.map((l) => `<a class="menu__link ${isActive(l.href) ? "is-active" : ""}" href="${esc(l.href)}">${esc(l.label)}</a>`).join("");
+  const links = NAV_LINKS.map((l) => `<a class="nav__link ${linkActive(l) ? "is-active" : ""}" href="${esc(l.href)}" ${linkActive(l) ? 'aria-current="page"' : ""}>${esc(l.label)}</a>`).join("");
+  const menu = NAV_LINKS.map((l) => `<a class="menu__link ${linkActive(l) ? "is-active" : ""}" href="${esc(l.href)}">${esc(l.label)}</a>`).join("");
+  const SUB_SHORT = { "data-analytics": "Data", "finance-accounting": "Finance", "management-strategy": "Management", "supply-chain-procurement": "Supply Chain" };
+  const sub = DEPARTMENT_PAGES.map((d) => { const href = `/departments/${d.slug}`; const on = path === href; return `<a class="subnav__link${on ? " is-active" : ""}" href="${esc(href)}"${on ? ' aria-current="page"' : ""}>${esc(SUB_SHORT[d.slug] || d.title)}</a>`; }).join("");
   return `<a class="skip-link" href="#main">Skip to content</a>
   <nav class="nav" aria-label="Main"><div class="nav__inner">
     <a class="nav__brand" href="/" aria-label="${esc(SITE.name)} home"><img src="/assets/logo-header.png" width="28" height="28" alt="">${esc(SITE.name)}</a>
@@ -25,7 +28,8 @@ function navHtml() {
       <button class="icon-btn" id="theme-toggle" type="button" aria-label="Toggle dark mode"></button>
       <a class="btn btn--outline btn--sm nav__cta" href="/contact">Contact Us</a>
       <button class="icon-btn burger-btn" id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span class="burger" aria-hidden="true"><span></span><span></span><span></span></span></button>
-    </div></div></nav>
+    </div></div>
+    <div class="subnav" role="navigation" aria-label="Departments"><div class="subnav__inner">${sub}</div></div></nav>
   <div class="menu" id="menu"><div class="menu__panel" role="dialog" aria-label="Menu">${menu}<a class="menu__link" href="/contact">Contact Us</a></div></div>`;
 }
 
@@ -37,7 +41,7 @@ function footerHtml() {
       <div class="footer__small"><span>${esc(SITE.email)}</span><span>placio.co.in</span></div>
       <a class="footer__small" style="margin-top:.6rem" href="${esc(SITE.instagramUrl)}" target="_blank" rel="noopener noreferrer">${esc(SITE.instagramHandle)} on Instagram</a></div>
     <div><div class="footer__head">Platform</div><nav class="footer__col" aria-label="Platform">${col(FOOTER_LINKS.platform)}</nav></div>
-    <div><div class="footer__head">Legal</div><nav class="footer__col" aria-label="Legal">${col(FOOTER_LINKS.legal)}<button type="button" data-open-prefs>Privacy &amp; cookie preferences</button></nav></div>
+    <div><div class="footer__head">Legal</div><nav class="footer__col" aria-label="Legal">${col(FOOTER_LINKS.legal)}</nav></div>
     <div><div class="footer__head">Contact</div><nav class="footer__col" aria-label="Contact"><a href="/contact">Contact Us</a><a href="mailto:${esc(SITE.email)}">Email Us</a></nav></div>
   </div><div class="footer__legal">© ${new Date().getFullYear()} ${esc(SITE.name)}.co.in — All rights reserved.</div></footer>`;
 }
@@ -85,8 +89,11 @@ function setupScroll() {
   top.addEventListener("click", () => scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }));
   document.body.appendChild(top);
   let ticking = false;
+  let lastY = scrollY;
   const update = () => {
     nav.classList.toggle("is-scrolled", scrollY > 8);
+    // phones: tuck the second menu line away while scrolling down, bring it back on scroll up
+    if (Math.abs(scrollY - lastY) > 6) { nav.classList.toggle("subnav-hidden", scrollY > 140 && scrollY > lastY); lastY = scrollY; }
     top.classList.toggle("is-visible", scrollY > 600);
     ticking = false;
   };
@@ -222,7 +229,7 @@ function boot() {
   setupTheme();
   setupMenu();
   setupScroll();
-  setupCursor();
+  // setupCursor(); // custom cursor ring disabled (looked like a stray circle)
   setupPrivacy();
   bindJobActions();
   observeReveals();

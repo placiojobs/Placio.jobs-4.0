@@ -3,6 +3,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://placio.co.in/</loc></url>
   <url><loc>https://placio.co.in/jobs</loc></url>
+  <url><loc>https://placio.co.in/departments/software-it</loc></url>
+  <url><loc>https://placio.co.in/departments/freshers</loc></url>
+  <url><loc>https://placio.co.in/departments/data-analytics</loc></url>
+  <url><loc>https://placio.co.in/departments/engineering</loc></url>
+  <url><loc>https://placio.co.in/departments/finance-accounting</loc></url>
+  <url><loc>https://placio.co.in/departments/sales-marketing</loc></url>
+  <url><loc>https://placio.co.in/departments/management-strategy</loc></url>
+  <url><loc>https://placio.co.in/departments/supply-chain-procurement</loc></url>
   <url><loc>https://placio.co.in/about</loc></url>
   <url><loc>https://placio.co.in/contact</loc></url>
   <url><loc>https://placio.co.in/privacy</loc></url>

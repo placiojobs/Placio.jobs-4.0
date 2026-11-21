@@ -16,7 +16,9 @@ import { jobCardHtml, skeletonCards, stateHtml } from "../ui.js";
 import { recordSearch } from "../store.js";
 import { track } from "../analytics.js";
 import { icons } from "../icons.js";
-import { $, esc, errorInfo, shareLink, lockScroll } from "../utils.js";
+import { $, esc, errorInfo, shareLink, lockScroll, makeDeptLabeler } from "../utils.js";
+
+let deptLabel = (d) => d; // clean names ("Java" not "Software-Java"); set once the department list is known
 
 let params = applyLegacyParams(new URLSearchParams(location.search)).params;
 let entries = null;
@@ -57,7 +59,7 @@ function setParams(patch, { remember = true } = {}) {
 function renderChips() {
   const chips = [
     ...(params.search ? [{ k: "search", label: `“${params.search}”` }] : []),
-    ...(params.dept || []).map((v) => ({ k: "dept", v, label: v })),
+    ...(params.dept || []).map((v) => ({ k: "dept", v, label: deptLabel(v) })),
     ...(params.location || []).map((v) => ({ k: "location", v, label: v })),
     ...(params.company || []).map((v) => ({ k: "company", v, label: v })),
     ...(params.exp || []).map((v) => ({ k: "exp", v, label: `Exp ${v}` })),
@@ -188,7 +190,11 @@ async function init() {
 
   const deptCounts = countBy(entries, "dept"), locCounts = countBy(entries, "location"), coCounts = countBy(entries, "company");
   // options = configured list (keeps your order) + any extra values that exist in the data
-  const deptOptions = [...MAJOR_DEPARTMENTS, ...uniqueExtras(MAJOR_DEPARTMENTS, deptCounts.keys())];
+  const allDepts = [...MAJOR_DEPARTMENTS, ...uniqueExtras(MAJOR_DEPARTMENTS, deptCounts.keys())];
+  deptLabel = makeDeptLabeler(allDepts);
+  // only departments that have jobs (plus anything already selected), biggest first
+  const keepDept = new Set(params.dept || []);
+  const deptOptions = allDepts.filter((d) => deptCounts.get(d) || keepDept.has(d)).sort((a, b) => (deptCounts.get(b) || 0) - (deptCounts.get(a) || 0) || deptLabel(a).localeCompare(deptLabel(b)));
   const locOptions = [...MAJOR_LOCATIONS, ...uniqueExtras(MAJOR_LOCATIONS, locCounts.keys())];
   const companyOptions = [...coCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map((c) => c[0]);
 
@@ -201,7 +207,7 @@ async function init() {
     onSelectDept: (d) => setParams({ dept: [...new Set([...(params.dept || []), d])] }),
     onSelectLocation: (l) => setParams({ location: [...new Set([...(params.location || []), l])] }),
   });
-  fDept = createMultiSelect($("#f-dept"), { label: "Department", options: deptOptions, counts: deptCounts, selected: params.dept, onChange: (v) => setParams({ dept: v }) });
+  fDept = createMultiSelect($("#f-dept"), { label: "Department", labelFn: deptLabel, options: deptOptions, counts: deptCounts, selected: params.dept, onChange: (v) => setParams({ dept: v }) });
   fLoc = createMultiSelect($("#f-loc"), { label: "Location", options: locOptions, counts: locCounts, selected: params.location, onChange: (v) => setParams({ location: v }) });
   if (companyOptions.length) fCompany = createMultiSelect($("#f-company"), { label: "Company", options: companyOptions, counts: coCounts, selected: params.company, onChange: (v) => setParams({ company: v }) });
   fExp = createExperienceField($("#f-exp"), { tokens: EXPERIENCE_TOKENS, selected: params.exp, onChange: (v) => setParams({ exp: v }) });

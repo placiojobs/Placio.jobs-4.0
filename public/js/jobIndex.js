@@ -30,7 +30,7 @@
 import { parseExperience, cleanExperienceText } from "./experience.js";
 import { buildJobSlug } from "./slug.js";
 import { blankIfPlaceholder } from "./normalize.js";
-import { DEPT_CITY_MATRIX } from "./site-config.js";
+import { DEPT_CITY_MATRIX, DEPARTMENT_PAGES, DEPARTMENT_MORE, DEPT_PAGE_LIMITS } from "./site-config.js";
 
 export const CHUNK_MAX_BYTES = 600_000; // keep well under Firestore's 1 MiB document limit
 export const CHUNK_MAX_ENTRIES = 2500;
@@ -102,7 +102,7 @@ export function sortEntries(entries) {
  * expMin -1 = unknown experience, expMax -1 = no upper bound. "Fresher" is derived (expMin === 0).
  * Rows are written in "latest first" order, so position IS the sort order — no timestamp is shipped.
  */
-export function encodePayload(sortedEntries) {
+export function encodePayload(sortedEntries, withDate = false) {
   const dict = { c: new Map(), d: new Map(), l: new Map() };
   const idx = (m, s) => {
     let i = m.get(s);
@@ -114,6 +114,7 @@ export function encodePayload(sortedEntries) {
     e.exp, e.type, e.salary, e.skills,
     e.experienceMin === null ? -1 : e.experienceMin,
     e.experienceMin === null || e.experienceMax === null ? -1 : e.experienceMax,
+    ...(withDate ? [e.createdAt || 0] : []),
   ]);
   return JSON.stringify({ v: PAYLOAD_VERSION, c: [...dict.c.keys()], d: [...dict.d.keys()], l: [...dict.l.keys()], r });
 }
@@ -127,6 +128,7 @@ export function decodePayload(text, offset = 0) {
       jobId: a[0], title: a[1], company: p.c[a[2]], location: p.l[a[3]], dept: p.d[a[4]],
       exp: a[5], type: a[6], salary: a[7], skills: a[8],
       experienceMin: a[9] < 0 ? null : a[9], experienceMax: a[10] < 0 ? null : a[10],
+      createdAt: a[11] || undefined,
       order: offset + i,
     })
   );
@@ -156,6 +158,44 @@ export function computeFacets(entries) {
     locs: { names: locs.map((d) => d[0]), counts: locs.map((d) => d[1]) },
     matrix: { depts: topDepts, cities: topCities, counts },
   };
+}
+
+// ── Department pages (/departments/<slug>): sub-department × city tables, computed once at publish time ──
+/**
+ * For every configured page: total jobs, the departments that have jobs, and a small sub-department × city count
+ * table. Smaller groups (DEPARTMENT_MORE) only get a total. Everything lands in the single meta document, so a
+ * visitor on a department page still costs ONE read (and 0 when meta is cached).
+ */
+export function computeDeptPages(entries) {
+  const lim = DEPT_PAGE_LIMITS;
+  const out = {};
+  const byDept = new Map();
+  for (const e of entries) if (e.dept) { if (!byDept.has(e.dept)) byDept.set(e.dept, []); byDept.get(e.dept).push(e); }
+  const build = (cfg, full) => {
+    const rows = [];
+    for (const d of cfg.depts) { const list = byDept.get(d); if (list?.length) rows.push([d, list]); }
+    rows.sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    const total = rows.reduce((s, r) => s + r[1].length, 0);
+    const res = { total, active: rows.map((r) => r[0]) };
+    if (!full) return res;
+    const cityCount = new Map();
+    for (const [, list] of rows) for (const e of list) if (e.location && !lim.excludeCities.includes(e.location)) cityCount.set(e.location, (cityCount.get(e.location) || 0) + 1);
+    const cities = [...cityCount.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, lim.maxCities).map((c) => c[0]);
+    const subs = rows.slice(0, lim.maxSubs);
+    res.subs = subs.map((r) => r[0]);
+    res.subTotals = subs.map((r) => r[1].length);
+    res.cities = cities;
+    res.counts = [];
+    for (const [, list] of subs) {
+      const m = new Map();
+      for (const e of list) m.set(e.location, (m.get(e.location) || 0) + 1);
+      for (const c of cities) res.counts.push(m.get(c) || 0);
+    }
+    return res;
+  };
+  for (const cfg of DEPARTMENT_PAGES) out[cfg.slug] = build(cfg, true);
+  DEPARTMENT_MORE.forEach((cfg, i) => { out[`m${i}`] = build(cfg, false); });
+  return out;
 }
 
 // ── Building everything the admin publishes ─────────────────────────────
@@ -204,10 +244,11 @@ export function buildIndexDocs(entries, prevMeta = null, now = Date.now()) {
     total: sorted.length,
     chunks: chunks.map((c) => ({ id: c.id, h: c.data.h, n: c.data.n })),
     adminChunks: adminChunks.map((c) => c.id),
-    latest: encodePayload(sorted.slice(0, LATEST_COUNT)),
+    latest: encodePayload(sorted.slice(0, LATEST_COUNT), true),
     depts: facets.depts,
     locs: facets.locs,
     matrix: facets.matrix,
+    deptPages: computeDeptPages(sorted),
     payloadHash: contentHash(fullPayload),
   };
   return { chunks, adminChunks, meta, fullPayload };

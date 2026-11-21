@@ -8,6 +8,7 @@ const BATCH = 120; // options rendered at a time (the company list can be thousa
  * @param {{label:string, options:string[], counts?:Map<string,number>, selected?:string[], onChange:(v:string[])=>void}} cfg
  */
 export function createMultiSelect(host, cfg) {
+  const labelOf = cfg.labelFn || ((o) => o);
   let options = cfg.options;
   let counts = cfg.counts || new Map();
   const selected = new Set(cfg.selected || []);
@@ -26,7 +27,7 @@ export function createMultiSelect(host, cfg) {
   const optHtml = (o) => {
     const on = selected.has(o);
     const c = counts.get(o);
-    return `<label class="multi__opt ${on ? "is-on" : ""}"><span><input type="checkbox" value="${esc(o)}" ${on ? "checked" : ""}><span>${esc(o)}</span></span>${c !== undefined ? `<span class="multi__count">${c}</span>` : ""}</label>`;
+    return `<label class="multi__opt ${on ? "is-on" : ""}"><span><input type="checkbox" value="${esc(o)}" ${on ? "checked" : ""}><span>${esc(labelOf(o))}</span></span>${c !== undefined ? `<span class="multi__count">${c}</span>` : ""}</label>`;
   };
   function renderMore(reset) {
     if (reset) { list.innerHTML = ""; rendered = 0; list.scrollTop = 0; }
@@ -40,7 +41,8 @@ export function createMultiSelect(host, cfg) {
   }
   function refilter() {
     const q = query.trim().toLowerCase();
-    filtered = q ? options.filter((o) => o.toLowerCase().includes(q)) : options;
+    // selected items first (when not searching), so a filter that came from a link is the first thing you see
+    filtered = q ? options.filter((o) => o.toLowerCase().includes(q) || labelOf(o).toLowerCase().includes(q)) : [...options.filter((o) => selected.has(o)), ...options.filter((o) => !selected.has(o))];
     renderMore(true);
   }
 
@@ -75,6 +77,7 @@ export function createMultiSelect(host, cfg) {
         c.closest(".multi__opt").classList.toggle("is-on", c.checked);
       });
       paintHead();
+      if (!query.trim()) refilter();
     },
     setOptions(nextOptions, nextCounts) {
       options = nextOptions;

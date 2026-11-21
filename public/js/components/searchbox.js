@@ -21,11 +21,15 @@ export function mountSearchBox(container, opts) {
   container.classList.add("searchbox");
   container.innerHTML = `${icons.search.replace("<svg", '<svg class="searchbox__icon"')}
     <input class="input input--pill" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="sg-${id}" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="200" aria-label="Search jobs" placeholder="${esc(opts.placeholder || "Search jobs")}">
+    <button type="button" class="searchbox__clear" aria-label="Clear search" hidden>×</button>
     ${opts.shortcut ? '<kbd aria-hidden="true">/</kbd>' : ""}
     <ul class="suggest" id="sg-${id}" role="listbox" hidden></ul>`;
   const input = container.querySelector("input");
   const list = container.querySelector(".suggest");
+  const clearBtn = container.querySelector(".searchbox__clear");
+  const syncClear = () => { clearBtn.hidden = !input.value; };
   input.value = opts.value || "";
+  setTimeout(() => clearBtn && (clearBtn.hidden = !input.value));
   let items = [];
   let active = -1;
   let entries = null;
@@ -78,7 +82,8 @@ export function mountSearchBox(container, opts) {
     opts.onSubmit(s.label);
   }
 
-  input.addEventListener("input", update);
+  input.addEventListener("input", () => { syncClear(); update(); });
+  clearBtn.addEventListener("click", () => { input.value = ""; items = []; close(); syncClear(); input.focus(); });
   input.addEventListener("focus", () => items.length && open());
   input.addEventListener("keydown", (e) => {
     if (e.key === "Escape") return close();
@@ -115,5 +120,5 @@ export function mountSearchBox(container, opts) {
       input.focus();
     });
   }
-  return { input, setValue: (v) => { input.value = v || ""; close(); } };
+  return { input, setValue: (v) => { input.value = v || ""; close(); syncClear(); } };
 }

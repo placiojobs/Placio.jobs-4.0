@@ -10,6 +10,8 @@ import { filterEntries, recommend, PAGE_SIZE } from "../public/js/jobsFilter.js"
 import { searchToParams, paramsToSearch, applyLegacyParams } from "../public/js/url.js";
 import { buildJobSlug, parseJobIdFromSlug } from "../public/js/slug.js";
 import { normalizeLocation } from "../public/js/location.js";
+import { computeDeptPages } from "../public/js/jobIndex.js";
+import { MAJOR_DEPARTMENTS, DEPARTMENT_PAGES, DEPARTMENT_MORE } from "../public/js/site-config.js";
 
 // ── Experience ───────────────────────────────────────────────────────────
 test("experience: flexible real-world formats", () => {
@@ -304,4 +306,32 @@ test("implausible experience (data accidents like 88, 1385, 5-1477) is unknown, 
   assert.equal(e.exp, "");
   assert.equal(e.experienceMin, null);
   assert.equal(matchesExperienceToken({ min: e.experienceMin, max: e.experienceMax, isFresher: e.isFresher }, "6"), false);
+});
+
+test("department pages: per-page totals, sub x city counts, small groups get a total only", () => {
+  const mk = (i, dept, location) => ({ jobId: "D" + i, title: "t", company: "c", location, dept, exp: "", type: "", salary: "", skills: "", order: i });
+  const rows = [
+    ...Array.from({ length: 5 }, (_, i) => mk(i, "Software-DevOps", "Pune")),
+    ...Array.from({ length: 2 }, (_, i) => mk(10 + i, "Software-DevOps", "Bengaluru")),
+    mk(20, "Software-Java", "Pune"), mk(21, "Cyber Security", "Remote"), mk(22, "Finance-Accounts", "Mumbai"), mk(23, "Legal", "Delhi"), mk(24, "Mystery Dept", "Pune"),
+  ];
+  const dp = computeDeptPages(rows);
+  const sw = dp["software-it"];
+  assert.equal(sw.total, 9, "DevOps 7 + Java 1 + Cyber Security 1 (moved into Software & IT)");
+  assert.equal(sw.subs[0], "Software-DevOps", "biggest specialisation first");
+  assert.deepEqual(sw.subTotals.slice(0, 2), [7, 1]);
+  assert.ok(!sw.cities.includes("Remote"), "Remote is not a city column");
+  assert.equal(sw.counts.length, sw.subs.length * sw.cities.length);
+  assert.equal(sw.counts[sw.cities.indexOf("Pune")], 5);
+  assert.equal(dp["finance-accounting"].total, 1);
+  assert.equal(dp["freshers"].total, 0);
+  assert.ok(Object.values(dp).some((x) => x.total === 1 && !x.subs), "small groups carry a total but no table");
+  assert.ok(!JSON.stringify(dp).includes("Mystery Dept"), "unknown departments are ignored");
+  for (const v of Object.values(dp)) for (const f of Object.values(v)) if (Array.isArray(f)) f.forEach((x) => assert.ok(!Array.isArray(x)));
+});
+
+test("every configured department (except Other) belongs to a department page or a smaller group", () => {
+  const covered = new Set([...DEPARTMENT_PAGES, ...DEPARTMENT_MORE].flatMap((g) => g.depts));
+  const missing = MAJOR_DEPARTMENTS.filter((d) => d !== "Other" && !covered.has(d));
+  assert.deepEqual(missing, [], "add these to DEPARTMENT_PAGES / DEPARTMENT_MORE in site-config.js: " + missing.join(", "));
 });
