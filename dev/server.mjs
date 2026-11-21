@@ -50,6 +50,7 @@ function resolveFile(urlPath) {
 
 http.createServer((req, res) => {
   const url = new URL(req.url, "http://localhost");
+  if (url.pathname.replace(/\/+$/, "") === "/departments") { res.writeHead(302, { Location: "/departments/software-it" }); res.end(); return; } // same as vercel.json
   let file = resolveFile(url.pathname);
   let status = 200;
   if (!file) {

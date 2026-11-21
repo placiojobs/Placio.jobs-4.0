@@ -4,6 +4,14 @@ export const $ = (sel, root = document) => root.querySelector(sel);
 export const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
 /** HTML-escape any value before putting it into an HTML string. EVERY dynamic value must go through this. */
+/** Clean department names for display ("Software-Java" -> "Java"). Values stay raw; a name that would clash keeps its full label. */
+export function makeDeptLabeler(all) {
+  const clean = (d) => d.replace(/^SAP-/, "SAP ").replace(/^(Software|Fresher|Engineer|Engineering|Finance|Sales|Marketing)-/, "");
+  const seen = new Map();
+  for (const d of new Set(all)) seen.set(clean(d), (seen.get(clean(d)) || 0) + 1);
+  return (d) => (seen.get(clean(d)) > 1 ? d : clean(d));
+}
+
 export function esc(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }

@@ -2,17 +2,23 @@
  * Browser-side loader for the job index (see jobIndex.js for the design).
  *
  * Caches, all intentional:
- *   meta/index doc   sessionStorage, 5 min TTL       (1 Firestore read per session at most)
+ *   meta/index doc   localStorage, 30 min TTL        (a returning visitor costs 0 reads for 30 minutes)
  *   the index data   IndexedDB, keyed by version/hash (re-downloaded only when the admin publishes)
- *   job documents    sessionStorage, 2 min, max 20    (back-button doesn't re-read)
- * Worst-case staleness for a visitor: ~5 minutes for lists, ~2 minutes for a job page, after an admin publish.
+ *   job documents    localStorage, 24 h, max 50, tied to the data version (a new daily version refreshes them)
+ * Static data (FEATURES.staticData): meta, the job index and every job are first read from plain files in /data
+ * (committed with the site), so browsing costs 0 Firestore reads. Anything missing falls back to Firestore.
+ * Worst-case staleness for a visitor: ~30 minutes after a new version is deployed (lists, department tables and job pages).
+ * If a publish lands while a visitor holds an old meta, the chunk-hash check below re-reads meta once automatically.
  */
 import * as fb from "./firebase.js";
 import { decodePayload, decodeChunks, decodeLatest, contentHash } from "./jobIndex.js";
 import { FEATURES } from "./site-config.js";
 
-const META_TTL = 5 * 60 * 1000;
-const JOB_TTL = 2 * 60 * 1000;
+const META_TTL = 30 * 60 * 1000;
+const JOB_TTL = 24 * 60 * 60 * 1000;
+const JOB_MAX = 50;
+const STATIC_DIR = "/data";
+const META_KEY = "placio.meta.v2";
 
 // ── tiny IndexedDB key/value (all failures are non-fatal: caching is an optimisation) ──
 function idb() {
@@ -49,25 +55,45 @@ async function idbSet(key, value) {
   }
 }
 
+// ── static data files (written by the admin "Download website data" export) ──
+async function staticFetch(path, as) {
+  if (!FEATURES.staticData || typeof fetch === "undefined") return null;
+  try {
+    const r = await fetch(`${STATIC_DIR}/${path}`, { cache: "no-cache" }); // revalidates: a 304 costs no Firestore read
+    if (!r.ok) return null;
+    const type = r.headers.get("content-type") || "";
+    if (as === "json" && !/json/i.test(type)) return null; // a host that answers unknown paths with the HTML shell
+    return as === "json" ? await r.json() : await r.text();
+  } catch {
+    return null;
+  }
+}
+
 // ── meta ──
 export async function loadMeta({ fresh = false } = {}) {
   if (!fresh) {
     try {
-      const c = JSON.parse(sessionStorage.getItem("placio.meta.v1") || "null");
-      if (c && Date.now() - c.at < META_TTL) return c.meta;
+      const c = JSON.parse(localStorage.getItem(META_KEY) || "null");
+      if (c && c.meta && Date.now() - c.at < META_TTL) return c.meta;
     } catch { /* ignore */ }
   }
-  const meta = await fb.getDocData("meta", "index");
+  let meta = null;
+  if (!fresh) {
+    const st = await staticFetch("meta.json", "json");
+    if (st && st.version && st.total >= 0 && st.payloadHash) meta = st;
+  }
+  if (!meta) meta = await fb.getDocData("meta", "index");
   try {
-    sessionStorage.setItem("placio.meta.v1", JSON.stringify({ at: Date.now(), meta }));
+    localStorage.setItem(META_KEY, JSON.stringify({ at: Date.now(), meta }));
   } catch { /* ignore */ }
   return meta;
 }
 
 export function forgetCaches() {
   try {
-    sessionStorage.removeItem("placio.meta.v1");
+    localStorage.removeItem(META_KEY);
     Object.keys(sessionStorage).filter((k) => k.startsWith("placio.job.")).forEach((k) => sessionStorage.removeItem(k));
+    Object.keys(localStorage).filter((k) => k.startsWith("placio.job.")).forEach((k) => localStorage.removeItem(k));
   } catch { /* ignore */ }
   indexPromise = null;
 }
@@ -97,7 +123,18 @@ async function fetchIndex(fresh, retried = false) {
     return { entries: decodeCached(cached), meta, source: "cache" };
   }
 
-  // 2. the single gzipped file in Storage (no Firestore reads)
+  // 2a. the static index file committed with the site (0 Firestore reads)
+  const stText = await staticFetch(`index-v${meta.version}.json`, "text");
+  if (stText) {
+    if (contentHash(stText) === meta.payloadHash) {
+      const record = { version: meta.version, payloadHash: meta.payloadHash, kind: "file", texts: [stText] };
+      idbSet("index", record);
+      return { entries: decodeCached(record), meta, source: "static" };
+    }
+    console.warn("[placio] static index file does not match meta; using the database instead");
+  }
+
+  // 2b. the single gzipped file in Storage (no Firestore reads)
   if (FEATURES.indexInStorage && meta.storage && meta.storage.url) {
     try {
       const text = await fb.fetchIndexText(meta.storage.url);
@@ -132,19 +169,38 @@ function decodeCached(record) {
 
 export { decodeLatest };
 
-// ── single job document (1 Firestore read, memoised for the session) ──
+// ── single job: browser cache (24 h) -> static file -> Firestore (1 read) ──
+function cachedJob(key, version) {
+  try {
+    const c = JSON.parse(localStorage.getItem(key) || "null");
+    if (c && c.job && Date.now() - c.at < JOB_TTL && (version == null || c.v == null || c.v === version)) return c.job;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function rememberJob(key, version, job) {
+  try {
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith("placio.job."));
+    if (keys.length >= JOB_MAX) {
+      keys
+        .map((k) => { try { return [k, JSON.parse(localStorage.getItem(k)).at || 0]; } catch { return [k, 0]; } })
+        .sort((a, b) => a[1] - b[1])
+        .slice(0, keys.length - JOB_MAX + 1)
+        .forEach(([k]) => localStorage.removeItem(k));
+    }
+    localStorage.setItem(key, JSON.stringify({ at: Date.now(), v: version ?? null, job }));
+  } catch { /* ignore */ }
+}
+
 export async function loadJob(jobId) {
   const key = `placio.job.${jobId}`;
-  try {
-    const c = JSON.parse(sessionStorage.getItem(key) || "null");
-    if (c && Date.now() - c.at < JOB_TTL) return c.job;
-  } catch { /* ignore */ }
-  const job = await fb.getDocData("jobs", jobId);
-  try {
-    // keep the session cache small: drop the oldest job entries beyond 20
-    const keys = Object.keys(sessionStorage).filter((k) => k.startsWith("placio.job."));
-    if (keys.length >= 20) sessionStorage.removeItem(keys[0]);
-    sessionStorage.setItem(key, JSON.stringify({ at: Date.now(), job }));
-  } catch { /* ignore */ }
+  // The data version we already know about (never fetched just for this: a direct visit to a job link stays at 1 read).
+  let version = null;
+  try { version = JSON.parse(localStorage.getItem(META_KEY) || "null")?.meta?.version ?? null; } catch { /* ignore */ }
+  const hit = cachedJob(key, version);
+  if (hit) return hit;
+  let job = await staticFetch(`jobs/${encodeURIComponent(jobId)}.json`, "json");
+  if (!job || job.jobId !== jobId) job = await fb.getDocData("jobs", jobId); // new since the last deploy, or removed
+  if (job) rememberJob(key, version, job);
   return job;
 }

@@ -3,8 +3,9 @@ import { requireAdmin, withBusy } from "./guard.js";
 import { loadMeta, loadIndex } from "../indexLoader.js";
 import { recentActivity, rebuildIndexFromDatabase } from "./adminData.js";
 import { downloadBlob } from "./excelIO.js";
+import { buildStaticData } from "./staticExport.js";
 import { runSetupCheck } from "./setupCheck.js";
-import { MAJOR_DEPARTMENTS, MAJOR_LOCATIONS, SITE, FEATURES } from "../site-config.js";
+import { MAJOR_DEPARTMENTS, MAJOR_LOCATIONS, DEPARTMENT_PAGES, SITE, FEATURES } from "../site-config.js";
 import { $, esc, formatDateTime, errorInfo, toast } from "../utils.js";
 
 const main = $("#admin-main");
@@ -19,7 +20,7 @@ const bars = (names, counts, n = 8) => {
 };
 
 function sitemapXml(entries) {
-  const urls = ["/", "/jobs", "/about", "/contact", "/privacy", "/terms", "/cookies"].map((p) => `<url><loc>${SITE.url}${p}</loc></url>`);
+  const urls = ["/", "/jobs", ...DEPARTMENT_PAGES.map((d) => `/departments/${d.slug}`), "/about", "/contact", "/privacy", "/terms", "/cookies"].map((p) => `<url><loc>${SITE.url}${p}</loc></url>`);
   const jobs = entries.map((e) => `<url><loc>${SITE.url}/jobs/${esc(e.slug)}</loc><changefreq>weekly</changefreq></url>`);
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...urls, ...jobs].join("\n")}\n</urlset>\n`;
 }
@@ -34,7 +35,9 @@ main.innerHTML = `<div class="admin-head"><div><h1>Dashboard</h1><p class="lead"
   <div class="grid-2" style="margin-top:1.25rem"><div class="panel"><h2>Jobs by department</h2><div id="depts"></div></div><div class="panel"><h2>Jobs by city</h2><div id="locs"></div></div></div>
   <div class="panel" style="margin-top:1rem"><h2>Tools</h2><div class="row">
     <button class="btn btn--outline btn--sm" id="sitemap" type="button">Download sitemap.xml</button>
-    <button class="btn btn--outline btn--sm" id="rebuild" type="button">Rebuild job index</button></div>
+    <button class="btn btn--outline btn--sm" id="rebuild" type="button">Rebuild job index</button>
+    <button class="btn btn--primary btn--sm" id="static-data" type="button">Download website data (zip)</button></div>
+    <p class="faint" style="font-size:.78rem;margin-top:.7rem"><b>Daily routine:</b> import the Excel, then press <b>Download website data</b>, unzip it so the <code>data</code> folder replaces <code>public/data</code>, commit and push. Visitors then read jobs from the website itself, with no database reads. Until you do, the site keeps using the database.</p>
     <p class="faint" style="font-size:.78rem;margin-top:.7rem">Rebuild re-reads every active job once (one read each) and republishes the public list — use it after editing jobs directly in the Firebase console, or the very first time on an existing database. The sitemap: upload it to the <code>public/</code> folder and redeploy so Google can find every job page.</p>
     <p id="tool-msg" class="banner" hidden style="margin-top:.8rem"></p></div>
   <div class="panel" style="margin-top:1rem"><h2>Import history &amp; recent activity</h2><div id="activity"><div class="skeleton" style="height:120px"></div></div></div>`;
@@ -87,7 +90,7 @@ $("#sitemap").addEventListener("click", (ev) => withBusy(ev.currentTarget, async
   try {
     const { entries } = await loadIndex({ fresh: true });
     downloadBlob(new Blob([sitemapXml(entries)], { type: "application/xml" }), "sitemap.xml");
-    msg(`Sitemap with ${entries.length + 7} URLs downloaded. Put it in the public/ folder and redeploy.`);
+    msg(`Sitemap with ${entries.length + 7 + DEPARTMENT_PAGES.length} URLs downloaded. Put it in the public/ folder and redeploy.`);
   } catch (e) { msg(errorInfo(e).message, "error"); }
 }));
 $("#rebuild").addEventListener("click", (ev) => withBusy(ev.currentTarget, async () => {
@@ -96,6 +99,15 @@ $("#rebuild").addEventListener("click", (ev) => withBusy(ev.currentTarget, async
     const r = await rebuildIndexFromDatabase({ actorEmail: email, onProgress: (t) => msg(t, "warn") });
     msg(`Done — ${r.count} jobs published.${r.warning ? " " + r.warning : ""}`, r.warning ? "warn" : "ok");
     toast("Index rebuilt");
+  } catch (e) { msg(errorInfo(e).message, "error"); }
+}));
+
+$("#static-data").addEventListener("click", (ev) => withBusy(ev.currentTarget, async () => {
+  if (!confirm("Download the website data?\n\nThis reads every active job once (that many Firestore reads) and gives you a zip with the data folder for the website.")) return;
+  try {
+    const r = await buildStaticData((t) => msg(t, "warn"));
+    downloadBlob(new Blob([r.zip], { type: "application/zip" }), `placio-data-v${r.version}.zip`);
+    msg(`Done — version ${r.version}, ${r.jobs} job files. Unzip it, replace public/data with the data folder, commit and push.`);
   } catch (e) { msg(errorInfo(e).message, "error"); }
 }));
 

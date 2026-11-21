@@ -37,6 +37,20 @@ export function shareButtonHtml(job) {
  * Hierarchy: Title → Company → Location → Experience → Type → Salary → Department.
  * A blank field simply isn't rendered (no "N/A", no empty row).
  */
+/** "Today" / "1d ago" / "2w ago" badge from a createdAt epoch (ms); empty when unknown. */
+export function freshLabel(ts) {
+  if (!ts) return "";
+  const d = Math.floor((Date.now() - ts) / 86400000);
+  if (d < 0 || d >= 60) return "";
+  if (d < 1) return "Today";
+  if (d < 14) return `${d}d ago`;
+  return `${Math.floor(d / 7)}w ago`;
+}
+function freshHtml(ts) {
+  const l = freshLabel(ts);
+  return l ? `<span class="job-card__fresh${l === "Today" ? " is-new" : ""}">${l}</span>` : "";
+}
+
 export function jobCardHtml(job, i = 0) {
   const meta = [
     job.location && `<span>${icons.pin}${esc(job.location)}</span>`,
@@ -51,6 +65,7 @@ export function jobCardHtml(job, i = 0) {
       ${meta ? `<div class="job-card__meta">${meta}</div>` : ""}
       ${job.salary ? `<div class="job-card__salary">${esc(job.salary)}</div>` : ""}
       ${job.dept ? `<div class="job-card__dept">${esc(job.dept)}</div>` : ""}
+      <div class="job-card__foot"><span class="job-card__cta">View &amp; Apply →</span>${freshHtml(job.createdAt)}</div>
     </a>
     <div class="job-card__actions">${saveButtonHtml(job.jobId)}${shareButtonHtml(job)}</div>
   </article>`;

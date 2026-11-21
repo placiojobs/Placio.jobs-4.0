@@ -26,7 +26,7 @@ async function workbook(headers, rows) {
   return (await wb.xlsx.writeBuffer()).buffer.slice(0);
 }
 const buf = async (...a) => { const b = await workbook(...a); return b instanceof ArrayBuffer ? b : b; };
-const row = (i, extra = {}) => ({ id: `T${String(i).padStart(5, "0")}`, title: `Engineer ${i}`, company: `Co ${i % 50}`, location: ["Pune", "Mumbai", "Bangalore"][i % 3], salary: "", exp: ["Fresher", "0-1", "1 to 3 years", ""][i % 4], type: "", dept: ["Software", "Finance"][i % 2], link: "https://x.co/" + i, desc: "d".repeat(200), skill: i % 2 ? "react" : "", ...extra });
+const row = (i, extra = {}) => ({ id: `T${String(i).padStart(5, "0")}`, title: `Engineer ${i}`, company: `Co ${i % 50}`, location: ["Pune", "Mumbai", "Bangalore"][i % 3], salary: "", exp: ["Fresher", "0-1", "1 to 3 years", ""][i % 4], type: "", dept: ["Software", "Finance-Accounts"][i % 2], link: "https://x.co/" + i, desc: "d".repeat(200), skill: i % 2 ? "react" : "", ...extra });
 const toRow = (r) => [r.id, r.title, r.company, r.location, r.salary, r.exp, r.type, r.dept, r.link, r.desc, r.skill];
 const rowsRaw = (n, f = row) => Array.from({ length: n }, (_, i) => { const r = f(i); return { jobId: r.id, title: r.title, company: r.company, location: r.location, salary: r.salary, exp: r.exp, type: r.type, dept: r.dept, link: r.link, desc: r.desc, skill_set: r.skill }; });
 

@@ -15,7 +15,8 @@ export const STORAGE_ITEMS = [
   { key: "placio.recentlyViewed.v1", where: "localStorage", category: "Functional", purpose: "Jobs you opened recently, for “Continue exploring”." },
   { key: "placio.recentSearches.v1", where: "localStorage", category: "Functional", purpose: "Your recent searches, for “Continue exploring”." },
   { key: "placio-index (database)", where: "IndexedDB", category: "Necessary", purpose: "A cached copy of the job list so Browse Jobs loads fast and uses less data." },
-  { key: "placio.meta.v1 / placio.job.*", where: "sessionStorage", category: "Necessary", purpose: "Short-lived cache of job counts and recently opened jobs (cleared when you close the tab)." },
+  { key: "placio.meta.v2", where: "localStorage", category: "Necessary", purpose: "Short-lived cache (about 30 minutes) of job counts, so pages load fast and use less data." },
+  { key: "placio.job.*", where: "localStorage", category: "Necessary", purpose: "Cache of recently opened jobs, kept up to 24 hours (or until the job list is updated) so pages open faster and use less data." },
 ];
 
 const SAVED = "placio.savedJobs.v1";
