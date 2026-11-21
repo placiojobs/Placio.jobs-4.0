@@ -967,3 +967,11 @@ html.dark .pv-contact a{color:#2DD4BF}
 html.dark .pv-hero h1 .hero__accent{color:#2DD4BF}
 .pv-lead{color:#475569}
 html.dark .pv-lead{color:#CBD5E1}
+/* Job card titles: wrap by whole words */
+.job-card__title { overflow-wrap: break-word; word-break: normal; hyphens: none; }
+/* Browse Jobs: use the free space on wide desktops (cards stay roomy, three per row) */
+@media (min-width: 1280px) {
+  body:has(.browse) #main.container { max-width: 88rem; }
+  body:has(.browse) .nav__inner { max-width: 86rem; }
+  body:has(.browse) .browse { grid-template-columns: 17rem minmax(0, 1fr); gap: 2rem; }
+}
