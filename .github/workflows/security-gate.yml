@@ -1,0 +1,79 @@
+# Placio security gate: runs on every push / pull request to main and weekly.
+# Every third-party action is pinned to a full commit ID (the tag is in the comment).
+name: Placio Security Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 4 * * 1" # every Monday 04:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Scan for Leaked Secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Run Gitleaks secret scanner
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # GITLEAKS_LICENSE is only needed when the repository belongs to a GitHub Organization.
+
+  dependency-and-site-check:
+    name: Dependency Audit & Site Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      # Placio has no install scripts and no build step (static site), so --ignore-scripts is safe here.
+      - name: Install exact lockfile dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Fail on high or critical vulnerabilities
+        run: npm audit --audit-level=high
+
+      - name: Static project checks (syntax, CSP-safe HTML, secrets)
+        run: npm run check
+
+      - name: Unit and integration tests
+        run: npm test
+
+  verify-live-headers:
+    name: Verify Live Security Headers
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: [secret-scan, dependency-and-site-check]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        with:
+          node-version: "22"
+
+      - name: Verify headers on the live site
+        run: node scripts/verify-headers.mjs https://www.placio.co.in
